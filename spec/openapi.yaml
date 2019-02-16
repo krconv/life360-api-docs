@@ -1,249 +1,706 @@
-# This is an **example** API to demonstrate features of OpenAPI specification.
-# It doesn't cover all OpenAPI features. For more full example check out: https://github.com/APIs-guru/petstore_extended
-
 openapi: 3.0.0
 info:
-  version: '1.0.0' # Your API version
-  # It can be any string but it is better to use semantic versioning: http://semver.org/
-  # Warning: OpenAPI require version to be string, but without quotation YAML can recognize it as number.
-  
-  title: Example.com # Replace with your API title
-  # Keep it simple. Don't add "API" or version at the end of the string.
+  version: '3'
 
-  termsOfService: 'https://example.com/terms/' # [Optional] Replace with an URL to your ToS
-  contact:
-    email: contact@example.com # [Optional] Replace with your contact email
-    url: 'http://example.com/contact' # [Optional] Replace with link to your contact form
-  license:
-    name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
-  x-logo:
-    url: 'https://apis.guru/openapi-template/logo.png'
-  
-  # Describe your API here, you can use GFM (https://guides.github.com/features/mastering-markdown) here
+  title: Life360
+
   description: |
-    This is an **example** API to demonstrate features of OpenAPI specification
-    # Introduction
-    This specification is intended to to be a good starting point for describing your API in 
-    [OpenAPI/Swagger format](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md).
-    It also demonstrates features of [generator-openapi-repo](https://github.com/Rebilly/generator-openapi-repo) tool and 
-    [ReDoc](https://github.com/Rebilly/ReDoc) documentation engine. So beyond the standard OpenAPI syntax we use a few 
-    [vendor extensions](https://github.com/Rebilly/ReDoc/blob/master/docs/redoc-vendor-extensions.md).
+    This is an **unofficial** API documentation for the REST API used by the Life360 web client.
 
-    # OpenAPI Specification
-    The goal of The OpenAPI Specification is to define a standard, language-agnostic interface to REST APIs which
-    allows both humans and computers to discover and understand the capabilities of the service without access to source
-    code, documentation, or through network traffic inspection. When properly defined via OpenAPI, a consumer can 
-    understand and interact with the remote service with a minimal amount of implementation logic. Similar to what
-    interfaces have done for lower-level programming, OpenAPI removes the guesswork in calling the service.
 externalDocs:
-  description: Find out how to create Github repo for your OpenAPI spec.
-  url: 'https://github.com/Rebilly/generator-openapi-repo'
+  description: Find out how more about Life360.
+  url: 'https://www.life360.com/'
 
-# A list of tags used by the specification with additional metadata.
-# The order of the tags can be used to reflect on their order by the parsing tools.
 tags:
-  - name: Echo
-    description: Example echo operations
-  - name: User
-    description: Operations about user
+  - name: Authentication
+    description: Operations for authenticating with the API
+  - name: Circles
+    description: Operations for retrieving information about Circles
+  - name: Places
+    description: Operations for retrieving information about Places
+  - name: Members
+    description: Operations for retrieving information about Members
+
 servers:
-  - url: 'http://example.com/api/v1'
-  - url: 'https://example.com/api/v1'
+  - url: 'https://life360/api/v3'
 
-# Holds the relative paths to the individual endpoints. The path is appended to the
-# basePath in order to construct the full URL. 
 paths:
-  '/users/{username}': # path parameter in curly braces
-
-    # parameters list that are used with each operation for this path
-    parameters:
-      - name: pretty_print
-        in: query
-        description: Pretty print response
-        schema:
-          type: boolean
-    get: # documentation for GET operation for this path
-      tags:
-        - User
-      
-      # summary is up to 120 symbold but we recommend to be shortest as possible
-      summary: Get user by user name
-      
-      # you can use GFM in operation description too: https://guides.github.com/features/mastering-markdown
-      description: |
-        Some description of the operation. 
-        You can use `markdown` here.
-      
-      # operationId should be unique across the whole specification
-      operationId: getUserByName
-      
-      # list of parameters for the operation
-      parameters:
-        - name: username
-          in: path
-          description: The name that needs to be fetched
-          required: true
-          schema:
-            type: string
-        - name: with_email
-          in: query
-          description: Filter users without email
-          schema:
-            type: boolean
-      
-      # security schemas applied to this operation
+  '/oauth2/token.json':
+    post:
       security:
-        - main_auth:
-            - 'read:users' # for auth2 provide list of scopes here
-        - api_key: []
-      responses: # list of responses
+        - Life360Auth: []
+
+      tags:
+        - Authentication
+
+      summary: Generate an access token
+
+      description: |
+        Generates an access token for authenicating further API requests.
+
+      operationId: generateToken
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                  example: "password"
+                username:
+                  type: string
+                  example: "example@email.com"
+                password:
+                  type: string
+
+      responses:
         '200':
           description: Success
           content:
-            application/json: # operation response mime type
-              schema: # response schema can be specified for each response
-                $ref: '#/components/schemas/User'
-              example: # response example
-                username: user1
-                email: user@example.com
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
         '403':
           description: Forbidden
-        '404':
-          description: User not found
-    # documentation for PUT operation for this path
-    put:
+
+  '/circles':
+    get:
       tags:
-        - User
-      summary: Updated user
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      parameters:
-        - name: username
-          in: path
-          description: The name that needs to be updated
-          required: true
-          schema:
-            type: string
-      security:
-        - main_auth:
-            - 'write:users'
+        - Circles
+
+      summary: Get all Circles
+
+      description: |
+        Get information about all of the Circles you belong to.
+
+      operationId: getCircles
+
       responses:
         '200':
-          description: OK
-        '400':
-          description: Invalid user supplied
-        '404':
-          description: User not found
-      # request body documentation
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/User'
-        description: Updated user object
-        required: true
-  /echo: # path parameter in curly braces
-    post: # documentation for POST operation for this path
-      tags:
-        - Echo
-      summary: Echo test
-      description: Receive the exact message you've sent
-      operationId: echo
-      security:
-        - api_key: []
-        - basic_auth: []
-      responses:
-        '200':
-          description: OK
-          # document headers for this response
-          headers:
-            X-Rate-Limit: # Header name
-              description: calls per hour allowed by the user
-              schema: # Header schema
-                type: integer
-                format: int32
-            X-Expires-After:
-              $ref: '#/components/headers/ExpiresAfter'
+          description: Success
           content:
             application/json:
               schema:
-                type: string
-              examples:
-                response:
-                  value: Hello world!
-            application/xml:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CircleInformation'
+        '403':
+          description: Forbidden
+
+  '/circles/{circle}':
+    get:
+      tags:
+        - Circles
+
+      summary: Get Circle
+
+      description: |
+        Get detailed information about a Circle you belong to.
+
+      operationId: getCircle
+
+      parameters:
+        - name: circle
+          in: path
+          description: The Circle to be fetched
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
               schema:
-                type: string
-            text/csv:
+                allOf:
+                  - $ref: '#/components/schemas/CircleInformation'
+                  - $ref: '#/components/schemas/CircleMembers'
+        '403':
+          description: Forbidden
+        '404':
+          description: Circle not found
+
+  '/circles/{circle}/places':
+    get:
+      tags:
+        - Circles
+        - Places
+
+      summary: Get Places
+
+      description: |
+        Get all of the Places that are defined for a Circle.
+
+      operationId: getPlaces
+
+      parameters:
+        - name: circle
+          in: path
+          description: The Circle to be fetched
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
               schema:
-                type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-              example: Hello world!
-          application/xml:
-            schema:
-              type: string
-              example: Hello world!
-        description: Echo payload
-        required: true
-        
-# An object to hold reusable parts that can be used across the spec
+                type: array
+                items:
+                  $ref: '#/components/schemas/Place'
+        '403':
+          description: Forbidden
+        '404':
+          description: Circle not found
+
+  '/circles/{circle}/places/{place}':
+    get:
+      tags:
+        - Circles
+        - Places
+
+      summary: Get Place
+
+      description: |
+        Get detailed information about a Place.
+
+      operationId: getPlace
+
+      parameters:
+        - name: circle
+          in: path
+          description: The Circle of the Place
+          required: true
+          schema:
+            type: string
+        - name: place
+          in: path
+          description: The Place to be fetched
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Place'
+        '403':
+          description: Forbidden
+        '404':
+          description: Place not found
+
+  '/circles/{circle}/members':
+    get:
+      tags:
+        - Circles
+        - Members
+
+      summary: Get Members
+
+      description: |
+        Get all of the Members that belong to a Circle.
+
+      operationId: getMembers
+
+      parameters:
+        - name: circle
+          in: path
+          description: The Circle to be fetched
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/MemberBasicInfo'
+                    - $ref: '#/components/schemas/MemberDetailedInfo'
+
+        '403':
+          description: Forbidden
+        '404':
+          description: Circle not found
+
+  '/circles/{circle}/members/{member}':
+    get:
+      tags:
+        - Members
+
+      summary: Get Member
+
+      description: |
+        Get detailed information about a Member.
+
+      operationId: getMember
+
+      parameters:
+        - name: circle
+          in: path
+          description: The Circle of the Member
+          required: true
+          schema:
+            type: string
+        - name: member
+          in: path
+          description: The Member to be fetched
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/MemberBasicInfo'
+                  - $ref: '#/components/schemas/MemberDetailedInfo'
+        '403':
+          description: Forbidden
+        '404':
+          description: Member not found
+
+  '/circles/{circle}/members/{member}/request':
+    post:
+      tags:
+        - Members
+
+      summary: Force a Member update
+
+      description: |
+        Forces an update for a Member's location.
+
+      parameters:
+        - name: circle
+          in: path
+          description: The Circle of the Member
+          required: true
+          schema:
+            type: string
+        - name: member
+          in: path
+          description: The Member to be updated
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    $ref: '#/components/schemas/Id'
+                  isPollable:
+                    type: string
+                    format: boolean
+                    example: "1"
+        '403':
+          description: Forbidden
+        '404':
+          description: Member not found
+
+  '/circles/members/request/{request}':
+    get:
+      tags:
+        - Members
+
+      summary: Get Member update status
+
+      description: |
+        Gets the status of a requested update for a Member's location.
+
+      parameters:
+        - name: request
+          in: path
+          description: The requested Update
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    $ref: '#/components/schemas/Id'
+                  groupId:
+                    $ref: '#/components/schemas/Id'
+                  location:
+                    $ref: '#/components/schemas/Location'
+        '403':
+          description: Forbidden
+        '404':
+          description: Request not found
+
 components:
   schemas:
-    Email:
-      description: User email address
+    Id:
+      description: Unique ID
       type: string
-      format: test
-      example: john.smith@example.com
-    User:
+      format: uuid
+      example: "b42ece6c-47b8-4061-a672-d55fd8211ce3"
+    Token:
       type: object
       properties:
-        username:
-          description: User supplied username
+        access_token:
           type: string
-          minLength: 4
-          example: John78
+          example: "MDBkZDNmdBa1DBiZC00YmI0LWJiYjctMjZkNWI1YjczODkx"
+        token_type:
+          type: string
+          example: "Bearer"
+        onboarding:
+          type: number
+          format: boolean
+          example: 0
+        user:
+          allOf:
+            - $ref: '#/components/schemas/MemberBasicInfo'
+            - $ref: '#/components/schemas/MemberSettings'
+        cobranding:
+          type: array
+          items:
+            type: object
+        promotions:
+          type: array
+          items:
+            type: object
+        state:
+          type: string
+
+    CircleInformation:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name:
+          type: string
+          example: "Smith Family"
+        color:
+          type: string
+          format: hex
+        type:
+          type: string
+          example: "basic"
+        createdAt:
+          type: string
+          example: "1493252439"
+        memberCount:
+          type: string
+          example: "2"
+        unreadMessages:
+          type: string
+          example: "3"
+        unreadNotifications:
+          type: string
+          example: "0"
+        features:
+          type: object
+    CircleMembers:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/MemberBasicInfo'
+              - $ref: '#/components/schemas/MemberDetailedInfo'
+    Place:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        ownerId:
+          $ref: '#/components/schemas/Id'
+        circleId:
+          $ref: '#/components/schemas/Id'
+        name:
+          type: string
+          example: "Home"
+        latitude:
+          type: string
+          format: latitude
+          example: "45.4333527"
+        longitude:
+          type: string
+          format: longitude
+          example: "-71.0591925"
+        radius:
+          type: string
+          example: "50"
+        type:
+          type: string
+        typeLabel:
+          type: string
+    MemberBasicInfo:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
         firstName:
-          description: User first name
           type: string
-          minLength: 1
-          example: John
+          example: "Joe"
         lastName:
-          description: User last name
           type: string
-          minLength: 1
-          example: Smith
-        email:
-          $ref: '#/components/schemas/Email'
+          example: "Smith"
+        loginEmail:
+          type: string
+          format: email
+          example: "example@email.com"
+        loginPhone:
+          type: string
+          format: phone
+          example: "+15555555555"
+        avatar:
+          type: string
+          format: url
+        communications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Communication'
+    MemberDetailedInfo:
+      type: object
+      properties:
+        isAdmin:
+          type: string
+          format: boolean
+          example: "0"
+        pinNumber:
+          type: string
+        activity:
+          type: string
+        createdAt:
+          type: string
+          example: "1493252626"
+        medical:
+          type: string
+        relation:
+          type: string
+        features:
+          $ref: '#/components/schemas/Features'
+        issues:
+          $ref: '#/components/schemas/Issues'
+        location:
+          $ref: '#/components/schemas/Location'
+    MemberSettings:
+      type: object
+      properties:
+        locale:
+          type: string
+          example: "en_US"
+        language:
+          type: string
+          example: "en"
+        created:
+          type: string
+          format: date
+          example: "2017-04-26 17:20:39"
+        settings:
+          type: object
+          properties:
+            map:
+              type: object
+              properites:
+                police:
+                  type: string
+                  format: boolean
+                  example: "1"
+                fire:
+                  type: string
+                  format: boolean
+                  example: "0"
+                hospital:
+                  type: string
+                  format: boolean
+                  example: "1"
+                sexOffenders:
+                  type: string
+                  format: boolean
+                  example: "0"
+                crime:
+                  type: string
+                  format: boolean
+                  example: "1"
+                crimeDuration:
+                  type: string
+                  format: boolean
+                  example: "1"
+                family:
+                  type: string
+                  format: boolean
+                  example: "1"
+                advisor:
+                  type: string
+                  format: boolean
+                  example: "1"
+                placeRadius:
+                  type: string
+                  format: boolean
+                  example: "1"
+                memberRadius:
+                  type: string
+                  format: boolean
+                  example: "0"
+            alerts:
+              type: object
+              properties:
+                crime:
+                  type: string
+                  format: boolean
+                  example: "0"
+                sound:
+                  type: string
+                  format: boolean
+                  example: "1"
+            zendesk:
+              type: object
+              properties:
+                sdk_enabled:
+                  type: string
+                  example: "ON"
+            locale:
+              type: string
+              example: "en_US"
+            unitOfMeasure:
+              type: string
+              example: "i"
+            dateFormat:
+              type: string
+              example: "mdy12"
+            timeZone:
+              type: string
+              example: "America\/New_York"
+        cobranding:
+          type: array
+          items:
+            type: object
+    Features:
+      type: object
+    Issues:
+      type: object
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: string
+          format: latitude
+          example: "45.4333527"
+        longitude:
+          type: string
+          format: longitude
+          example: "-71.0591925"
+        accuracy:
+          type: string
+          example: "50"
+        startTimestamp:
+          type: number
+          example: 1550279521
+        endTimestamp:
+          type: string
+          example: "1550320040"
+        since:
+          type: number
+          example: 1550279521
+        timestamp:
+          type: string
+          example: "1550320040"
+        name:
+          type: string
+          description: Name of the Place for this location
+          example: "Home"
+        placeType:
+          type: string
+        source:
+          type: string
+          example: "l"
+        sourceId:
+          $ref: '#/components/schemas/Id'
+        address1:
+          type: string
+          example: "Home"
+        address2:
+          type: string
+        shortAddress:
+          type: string
+        inTransit:
+          type: string
+          format: boolean
+          example: "1"
+        tripId:
+          $ref: '#/components/schemas/Id'
+        driveSDKStatus:
+          type: string
+        battery:
+          type: string
+          format: percent
+          example: "93"
+        charge:
+          type: string
+          format: boolean
+          example: "0"
+        wifiState:
+          type: string
+          format: boolean
+          example: "1"
+        speed:
+          type: number
+          example: 12
+        isDriving:
+          type: string
+          format: boolean
+          example: "0"
+    Communication:
+      type: object
+      properties:
+        channel:
+          type: string
+          example: "Voice"
+        value:
+          type: string
+          example: "+15555555555"
+        type:
+          type: string
+          example: "Mobile"
   headers:
     ExpiresAfter:
       description: date in UTC when token expires
       schema:
         type: string
         format: date-time
-  # Security scheme definitions that can be used across the specification.
   securitySchemes:
-    main_auth: # security definition name (you can name it as you want)
-      # the following options are specific to oauth2 type
-      type: oauth2 # authorization type, one of: oauth2, apiKey, http
-      flows:
-        implicit:
-          authorizationUrl: 'http://example.com/api/oauth/dialog'
-          scopes:
-            'read:users': read users info
-            'write:users': modify or remove users
-    api_key:  # security definition name (you can name it as you want)
-      type: apiKey 
-      # The following options are specific to apiKey type
-      in: header # Where API key will be passed: header or query
-      name: api_key # API key parameter name
-    basic_auth: # security definition name (you can name it as you want)
+    Life360Auth:
+      description: |
+        A hardcoded authenication, used to authenticate the client when generating an access token.
       type: http
       scheme: basic
+    BearerToken:
+      description: |
+        An authenication generated using the "Generate an access token" request.
+      type: http
+      scheme: bearer
+
+security:
+  - BearerToken: []
