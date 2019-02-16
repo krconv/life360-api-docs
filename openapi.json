@@ -1,90 +1,136 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "version": "1.2.0",
-    "title": "Example.com",
-    "termsOfService": "https://example.com/terms/",
-    "contact": {
-      "email": "contact@example.com",
-      "url": "http://example.com/contact"
-    },
-    "license": {
-      "name": "Apache 2.0",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-    },
-    "x-logo": {
-      "url": "https://apis.guru/openapi-template/logo.png"
-    },
-    "description": "This is an **example** API to demonstrate features of OpenAPI specification\n# Introduction\nThis specification is intended to to be a good starting point for describing your API in \n[OpenAPI/Swagger format](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md).\nIt also demonstrates features of [generator-openapi-repo](https://github.com/Rebilly/generator-openapi-repo) tool and \n[ReDoc](https://github.com/Rebilly/ReDoc) documentation engine. So beyond the standard OpenAPI syntax we use a few \n[vendor extensions](https://github.com/Rebilly/ReDoc/blob/master/docs/redoc-vendor-extensions.md).\n\n# OpenAPI Specification\nThe goal of The OpenAPI Specification is to define a standard, language-agnostic interface to REST APIs which\nallows both humans and computers to discover and understand the capabilities of the service without access to source\ncode, documentation, or through network traffic inspection. When properly defined via OpenAPI, a consumer can \nunderstand and interact with the remote service with a minimal amount of implementation logic. Similar to what\ninterfaces have done for lower-level programming, OpenAPI removes the guesswork in calling the service.\n"
+    "version": "3",
+    "title": "Life360",
+    "description": "This is an **unofficial** API documentation for the REST API used by the Life360 web client.\n"
   },
   "externalDocs": {
-    "description": "Find out how to create Github repo for your OpenAPI spec.",
-    "url": "https://github.com/Rebilly/generator-openapi-repo"
+    "description": "Find out how more about Life360.",
+    "url": "https://www.life360.com/"
   },
   "tags": [
     {
-      "name": "Echo",
-      "description": "Example echo operations"
+      "name": "Authentication",
+      "description": "Operations for authenticating with the API"
     },
     {
-      "name": "User",
-      "description": "Operations about user"
+      "name": "Circles",
+      "description": "Operations for retrieving information about Circles"
+    },
+    {
+      "name": "Places",
+      "description": "Operations for retrieving information about Places"
+    },
+    {
+      "name": "Members",
+      "description": "Operations for retrieving information about Members"
     }
   ],
   "servers": [
     {
-      "url": "http://example.com/api/v1"
-    },
-    {
-      "url": "https://example.com/api/v1"
+      "url": "https://life360/api/v3"
     }
   ],
   "paths": {
-    "/users/{username}": {
-      "parameters": [
-        {
-          "name": "pretty_print",
-          "in": "query",
-          "description": "Pretty print response",
-          "schema": {
-            "type": "boolean"
+    "/oauth2/token.json": {
+      "post": {
+        "security": [
+          {
+            "Life360Auth": []
+          }
+        ],
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Generate an access token",
+        "description": "Generates an access token for authenicating further API requests.\n",
+        "operationId": "generateToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant_type": {
+                    "type": "string",
+                    "example": "password"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "example@email.com"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
           }
         }
-      ],
+      }
+    },
+    "/circles": {
       "get": {
         "tags": [
-          "User"
+          "Circles"
         ],
-        "summary": "Get user by user name",
-        "description": "Some description of the operation. \nYou can use `markdown` here.\n",
-        "operationId": "getUserByName",
+        "summary": "Get all Circles",
+        "description": "Get information about all of the Circles you belong to.\n",
+        "operationId": "getCircles",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CircleInformation"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/circles/{circle}": {
+      "get": {
+        "tags": [
+          "Circles"
+        ],
+        "summary": "Get Circle",
+        "description": "Get detailed information about a Circle you belong to.\n",
+        "operationId": "getCircle",
         "parameters": [
           {
-            "name": "username",
+            "name": "circle",
             "in": "path",
-            "description": "The name that needs to be fetched",
+            "description": "The Circle to be fetched",
             "required": true,
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "with_email",
-            "in": "query",
-            "description": "Filter users without email",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "security": [
-          {
-            "main_auth": [
-              "read:users"
-            ]
-          },
-          {
-            "api_key": []
           }
         ],
         "responses": {
@@ -93,11 +139,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User"
-                },
-                "example": {
-                  "username": "user1",
-                  "email": "user@example.com"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CircleInformation"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CircleMembers"
+                    }
+                  ]
                 }
               }
             }
@@ -106,171 +155,771 @@
             "description": "Forbidden"
           },
           "404": {
-            "description": "User not found"
+            "description": "Circle not found"
           }
         }
-      },
-      "put": {
+      }
+    },
+    "/circles/{circle}/places": {
+      "get": {
         "tags": [
-          "User"
+          "Circles",
+          "Places"
         ],
-        "summary": "Updated user",
-        "description": "This can only be done by the logged in user.",
-        "operationId": "updateUser",
+        "summary": "Get Places",
+        "description": "Get all of the Places that are defined for a Circle.\n",
+        "operationId": "getPlaces",
         "parameters": [
           {
-            "name": "username",
+            "name": "circle",
             "in": "path",
-            "description": "The name that needs to be updated",
+            "description": "The Circle to be fetched",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "security": [
-          {
-            "main_auth": [
-              "write:users"
-            ]
-          }
-        ],
         "responses": {
           "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Invalid user supplied"
-          },
-          "404": {
-            "description": "User not found"
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/User"
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "$ref": "#/components/schemas/User"
-              }
-            }
-          },
-          "description": "Updated user object",
-          "required": true
-        }
-      }
-    },
-    "/echo": {
-      "post": {
-        "tags": [
-          "Echo"
-        ],
-        "summary": "Echo test",
-        "description": "Receive the exact message you've sent",
-        "operationId": "echo",
-        "security": [
-          {
-            "api_key": []
-          },
-          {
-            "basic_auth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "headers": {
-              "X-Rate-Limit": {
-                "description": "calls per hour allowed by the user",
-                "schema": {
-                  "type": "integer",
-                  "format": "int32"
-                }
-              },
-              "X-Expires-After": {
-                "$ref": "#/components/headers/ExpiresAfter"
-              }
-            },
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "string"
-                },
-                "examples": {
-                  "response": {
-                    "value": "Hello world!"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Place"
                   }
                 }
-              },
-              "application/xml": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "text/csv": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string",
-                "example": "Hello world!"
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "type": "string",
-                "example": "Hello world!"
               }
             }
           },
-          "description": "Echo payload",
-          "required": true
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Circle not found"
+          }
+        }
+      }
+    },
+    "/circles/{circle}/places/{place}": {
+      "get": {
+        "tags": [
+          "Circles",
+          "Places"
+        ],
+        "summary": "Get Place",
+        "description": "Get detailed information about a Place.\n",
+        "operationId": "getPlace",
+        "parameters": [
+          {
+            "name": "circle",
+            "in": "path",
+            "description": "The Circle of the Place",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "place",
+            "in": "path",
+            "description": "The Place to be fetched",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Place"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Place not found"
+          }
+        }
+      }
+    },
+    "/circles/{circle}/members": {
+      "get": {
+        "tags": [
+          "Circles",
+          "Members"
+        ],
+        "summary": "Get Members",
+        "description": "Get all of the Members that belong to a Circle.\n",
+        "operationId": "getMembers",
+        "parameters": [
+          {
+            "name": "circle",
+            "in": "path",
+            "description": "The Circle to be fetched",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/MemberBasicInfo"
+                      },
+                      {
+                        "$ref": "#/components/schemas/MemberDetailedInfo"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Circle not found"
+          }
+        }
+      }
+    },
+    "/circles/{circle}/members/{member}": {
+      "get": {
+        "tags": [
+          "Members"
+        ],
+        "summary": "Get Member",
+        "description": "Get detailed information about a Member.\n",
+        "operationId": "getMember",
+        "parameters": [
+          {
+            "name": "circle",
+            "in": "path",
+            "description": "The Circle of the Member",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "member",
+            "in": "path",
+            "description": "The Member to be fetched",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/MemberBasicInfo"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MemberDetailedInfo"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Member not found"
+          }
+        }
+      }
+    },
+    "/circles/{circle}/members/{member}/request": {
+      "post": {
+        "tags": [
+          "Members"
+        ],
+        "summary": "Force a Member update",
+        "description": "Forces an update for a Member's location.\n",
+        "parameters": [
+          {
+            "name": "circle",
+            "in": "path",
+            "description": "The Circle of the Member",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "member",
+            "in": "path",
+            "description": "The Member to be updated",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestId": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "isPollable": {
+                      "type": "string",
+                      "format": "boolean",
+                      "example": "1"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Member not found"
+          }
+        }
+      }
+    },
+    "/circles/members/request/{request}": {
+      "get": {
+        "tags": [
+          "Members"
+        ],
+        "summary": "Get Member update status",
+        "description": "Gets the status of a requested update for a Member's location.\n",
+        "parameters": [
+          {
+            "name": "request",
+            "in": "path",
+            "description": "The requested Update",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestId": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "groupId": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "location": {
+                      "$ref": "#/components/schemas/Location"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Request not found"
+          }
         }
       }
     }
   },
   "components": {
     "schemas": {
-      "Email": {
-        "description": "User email address",
+      "Id": {
+        "description": "Unique ID",
         "type": "string",
-        "format": "test",
-        "example": "john.smith@example.com"
+        "format": "uuid",
+        "example": "b42ece6c-47b8-4061-a672-d55fd8211ce3"
       },
-      "User": {
+      "Token": {
         "type": "object",
         "properties": {
-          "username": {
-            "description": "User supplied username",
+          "access_token": {
             "type": "string",
-            "minLength": 4,
-            "example": "John78"
+            "example": "MDBkZDNmdBa1DBiZC00YmI0LWJiYjctMjZkNWI1YjczODkx"
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "onboarding": {
+            "type": "number",
+            "format": "boolean",
+            "example": 0
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MemberBasicInfo"
+              },
+              {
+                "$ref": "#/components/schemas/MemberSettings"
+              }
+            ]
+          },
+          "cobranding": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "promotions": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "state": {
+            "type": "string"
+          }
+        }
+      },
+      "CircleInformation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "example": "Smith Family"
+          },
+          "color": {
+            "type": "string",
+            "format": "hex"
+          },
+          "type": {
+            "type": "string",
+            "example": "basic"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "1493252439"
+          },
+          "memberCount": {
+            "type": "string",
+            "example": "2"
+          },
+          "unreadMessages": {
+            "type": "string",
+            "example": "3"
+          },
+          "unreadNotifications": {
+            "type": "string",
+            "example": "0"
+          },
+          "features": {
+            "type": "object"
+          }
+        }
+      },
+      "CircleMembers": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/MemberBasicInfo"
+                },
+                {
+                  "$ref": "#/components/schemas/MemberDetailedInfo"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Place": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "ownerId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "circleId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "name": {
+            "type": "string",
+            "example": "Home"
+          },
+          "latitude": {
+            "type": "string",
+            "format": "latitude",
+            "example": "45.4333527"
+          },
+          "longitude": {
+            "type": "string",
+            "format": "longitude",
+            "example": "-71.0591925"
+          },
+          "radius": {
+            "type": "string",
+            "example": "50"
+          },
+          "type": {
+            "type": "string"
+          },
+          "typeLabel": {
+            "type": "string"
+          }
+        }
+      },
+      "MemberBasicInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
           },
           "firstName": {
-            "description": "User first name",
             "type": "string",
-            "minLength": 1,
-            "example": "John"
+            "example": "Joe"
           },
           "lastName": {
-            "description": "User last name",
             "type": "string",
-            "minLength": 1,
             "example": "Smith"
           },
-          "email": {
-            "$ref": "#/components/schemas/Email"
+          "loginEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "example@email.com"
+          },
+          "loginPhone": {
+            "type": "string",
+            "format": "phone",
+            "example": "+15555555555"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "url"
+          },
+          "communications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Communication"
+            }
+          }
+        }
+      },
+      "MemberDetailedInfo": {
+        "type": "object",
+        "properties": {
+          "isAdmin": {
+            "type": "string",
+            "format": "boolean",
+            "example": "0"
+          },
+          "pinNumber": {
+            "type": "string"
+          },
+          "activity": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "1493252626"
+          },
+          "medical": {
+            "type": "string"
+          },
+          "relation": {
+            "type": "string"
+          },
+          "features": {
+            "$ref": "#/components/schemas/Features"
+          },
+          "issues": {
+            "$ref": "#/components/schemas/Issues"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          }
+        }
+      },
+      "MemberSettings": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "example": "en_US"
+          },
+          "language": {
+            "type": "string",
+            "example": "en"
+          },
+          "created": {
+            "type": "string",
+            "format": "date",
+            "example": "2017-04-26 17:20:39"
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "map": {
+                "type": "object",
+                "properites": {
+                  "police": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  },
+                  "fire": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "0"
+                  },
+                  "hospital": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  },
+                  "sexOffenders": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "0"
+                  },
+                  "crime": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  },
+                  "crimeDuration": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  },
+                  "family": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  },
+                  "advisor": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  },
+                  "placeRadius": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  },
+                  "memberRadius": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "0"
+                  }
+                }
+              },
+              "alerts": {
+                "type": "object",
+                "properties": {
+                  "crime": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "0"
+                  },
+                  "sound": {
+                    "type": "string",
+                    "format": "boolean",
+                    "example": "1"
+                  }
+                }
+              },
+              "zendesk": {
+                "type": "object",
+                "properties": {
+                  "sdk_enabled": {
+                    "type": "string",
+                    "example": "ON"
+                  }
+                }
+              },
+              "locale": {
+                "type": "string",
+                "example": "en_US"
+              },
+              "unitOfMeasure": {
+                "type": "string",
+                "example": "i"
+              },
+              "dateFormat": {
+                "type": "string",
+                "example": "mdy12"
+              },
+              "timeZone": {
+                "type": "string",
+                "example": "America/New_York"
+              }
+            }
+          },
+          "cobranding": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "Features": {
+        "type": "object"
+      },
+      "Issues": {
+        "type": "object"
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "string",
+            "format": "latitude",
+            "example": "45.4333527"
+          },
+          "longitude": {
+            "type": "string",
+            "format": "longitude",
+            "example": "-71.0591925"
+          },
+          "accuracy": {
+            "type": "string",
+            "example": "50"
+          },
+          "startTimestamp": {
+            "type": "number",
+            "example": 1550279521
+          },
+          "endTimestamp": {
+            "type": "string",
+            "example": "1550320040"
+          },
+          "since": {
+            "type": "number",
+            "example": 1550279521
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "1550320040"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the Place for this location",
+            "example": "Home"
+          },
+          "placeType": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "example": "l"
+          },
+          "sourceId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "address1": {
+            "type": "string",
+            "example": "Home"
+          },
+          "address2": {
+            "type": "string"
+          },
+          "shortAddress": {
+            "type": "string"
+          },
+          "inTransit": {
+            "type": "string",
+            "format": "boolean",
+            "example": "1"
+          },
+          "tripId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "driveSDKStatus": {
+            "type": "string"
+          },
+          "battery": {
+            "type": "string",
+            "format": "percent",
+            "example": "93"
+          },
+          "charge": {
+            "type": "string",
+            "format": "boolean",
+            "example": "0"
+          },
+          "wifiState": {
+            "type": "string",
+            "format": "boolean",
+            "example": "1"
+          },
+          "speed": {
+            "type": "number",
+            "example": 12
+          },
+          "isDriving": {
+            "type": "string",
+            "format": "boolean",
+            "example": "0"
+          }
+        }
+      },
+      "Communication": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "example": "Voice"
+          },
+          "value": {
+            "type": "string",
+            "example": "+15555555555"
+          },
+          "type": {
+            "type": "string",
+            "example": "Mobile"
           }
         }
       }
@@ -285,27 +934,21 @@
       }
     },
     "securitySchemes": {
-      "main_auth": {
-        "type": "oauth2",
-        "flows": {
-          "implicit": {
-            "authorizationUrl": "http://example.com/api/oauth/dialog",
-            "scopes": {
-              "read:users": "read users info",
-              "write:users": "modify or remove users"
-            }
-          }
-        }
-      },
-      "api_key": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "api_key"
-      },
-      "basic_auth": {
+      "Life360Auth": {
+        "description": "A hardcoded authenication, used to authenticate the client when generating an access token.\n",
         "type": "http",
         "scheme": "basic"
+      },
+      "BearerToken": {
+        "description": "An authenication generated using the \"Generate an access token\" request.\n",
+        "type": "http",
+        "scheme": "bearer"
       }
     }
-  }
+  },
+  "security": [
+    {
+      "BearerToken": []
+    }
+  ]
 }
